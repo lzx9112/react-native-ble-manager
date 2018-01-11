@@ -232,12 +232,23 @@ class BleManager extends ReactContextBaseJavaModule implements ActivityEventList
 	}
 
 	/** 16进制字符串转换成16进制byte数组，每两位转换 */
-	public static byte[] strToHexByteArray(String str){
-		byte[] hexByte = new byte[str.length()/2];
-		for(int i = 0,j = 0; i < str.length(); i = i + 2,j++){
-			hexByte[j] = (byte)Integer.parseInt(str.substring(i,i+2), 16);
+	public static byte[] hexStringToBytes(String hexString) {
+		if (hexString == null || hexString.equals("")) {
+			return null;
 		}
-		return hexByte;
+		hexString = hexString.toUpperCase();
+		int length = hexString.length() / 2;
+		char[] hexChars = hexString.toCharArray();
+		byte[] d = new byte[length];
+		for (int i = 0; i < length; i++) {
+			int pos = i * 2;
+			d[i] = (byte) (charToByte(hexChars[pos]) << 4 | charToByte(hexChars[pos + 1]));
+		}
+		return d;
+	}
+
+	public static byte charToByte(char c) {
+		return (byte) "0123456789ABCDEF".indexOf(c);
 	}
 
 	// @ReactMethod
@@ -271,7 +282,7 @@ class BleManager extends ReactContextBaseJavaModule implements ActivityEventList
 			// Log.d(LOG_TAG, "Message(" + decoded.length + "): " + bytesToHex(decoded));
 
 			//message由原来的ReadableArray类型改为String类型，再将16进制字符串转化成16进制byte[]数组
-			byte [] decoded = strToHexByteArray(message);
+			byte [] decoded = hexStringToBytes(message);
 			Log.d(LOG_TAG, "decoded: " + Arrays.toString(decoded));
 
 			peripheral.write(UUIDHelper.uuidFromString(serviceUUID), UUIDHelper.uuidFromString(characteristicUUID), decoded, maxByteSize, null, callback, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
@@ -292,7 +303,7 @@ class BleManager extends ReactContextBaseJavaModule implements ActivityEventList
 			// Log.d(LOG_TAG, "Message(" + decoded.length + "): " + bytesToHex(decoded));
 			
 			//message由原来的ReadableArray类型改为String类型，再将16进制字符串转化成16进制byte[]数组
-			byte [] decoded = strToHexByteArray(message);
+			byte [] decoded = hexStringToBytes(message);
 			Log.d(LOG_TAG, "decoded: " + Arrays.toString(decoded));
 			peripheral.write(UUIDHelper.uuidFromString(serviceUUID), UUIDHelper.uuidFromString(characteristicUUID), decoded, maxByteSize, queueSleepTime, callback, BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE);
 		} else
